@@ -126,8 +126,19 @@ app.get("/messages", async(req, res) => {
 })
 
 app.post("/status", async(req, res) => {
+    const {user} = req.headers
+    if (!user) return res.sendStatus(404)
+    
     try {
-        
+        const userExist = await db.collection("participants").findOne({name: user})
+        if (!userExist) return res.status(422).send("Usuário não cadastrado")
+
+        await db.collection("messages").updateOne(
+            {name: user},
+            {$set: {lastStatus: Date.now()}}
+        )
+
+        res.sendStatus(200)
     } catch (error) {
         res.status(500).send(error.message)
     }
