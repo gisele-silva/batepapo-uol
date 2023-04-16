@@ -102,8 +102,8 @@ app.post("/messages", async(req, res) => {
 })
 
 app.get("/messages", async(req, res) => {
-    const { user } = req.header
-    const { limit } = req.query
+    const { user } = req.headers
+    const limit = parseInt(req.query.limit)
     
     if(limit <= 0 || typeof(limit) !== "number") return res.sendStatus(422)
 
