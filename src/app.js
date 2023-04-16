@@ -101,8 +101,23 @@ app.post("/messages", async(req, res) => {
 })
 
 app.get("/messages", async(req, res) => {
+    const { user } = req.header
+    const { limit } = req.query
+    
+    if(limit <= 0 || typeof(limit) !== "number") return res.sendStatus(422)
+
     try {
+        const messages = await db.collection("messages").find().toArray()
         
+        const findMessages = messages.filter((message) => {
+            const messagePrivate = message.to==="todos" || messages.to===user ||messages.from===user
+            const messagePublic = message.type === "messages"
+            return messagePrivate || messagePublic
+        })
+        
+        if(limit && limit !== Nan) return res.send(findMessages.slice(limit))
+        
+    res.send(findMessages)
     } catch (error) {
         res.status(500).send(error.message)
     }
