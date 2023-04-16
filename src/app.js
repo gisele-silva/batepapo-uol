@@ -3,6 +3,7 @@ import cors from "cors"
 import { MongoClient } from "mongodb"
 import dotenv from "dotenv"
 import joi from "joi"
+import dayjs from "dayjs"
 
 const app = express()
 app.use(cors())
@@ -18,14 +19,14 @@ mongoClient.connect()
 .catch((err) => console.log(err.message))
 //Fim da Conexão do banco de dados
 
+const userSchema = joi.object({
+    name: joi.string().required().min(1)
+})
+
 app.post("/participants", async(req, res) => {
     const { name } = req.body
     
-    const userSchema = joi.object({
-        name: joi.string().required()
-    })
-
-    const validation = userSchema.validate(name, {abortEarly: false})
+    const validation = userSchema.validate({name}, {abortEarly: false})
 
     if(validation.error){
         const errors = validation.error.details.map((detail) => detail.message)
@@ -33,24 +34,34 @@ app.post("/participants", async(req, res) => {
     }
     
     try {
-        const userExist = await db.collection("participants").findOne({name: name})
+        const userExist = await db.collection("participants").findOne({name})
         if (userExist) return res.status(409).send("Usuário já cadastrado")
 
-        db.collection("participants").insertOne({
+        await db.collection("participants").insertOne({
             name,
             lastStatus: Date.now()
         })
+
+        await db.collection("messages").insertOne({
+            from: name,
+            to: "Todos",
+            text: "entra na sala...",
+            type: "status",
+            time: dayjs().format("HH:mm:ss")
+        })
+
         res.sendStatus(201)
     } catch (error) {
-        res.status(500).send(err.message)
+        res.status(500).send(error.message)
     }
+
 })
 
 app.get("/participants", async(req, res) => {
     try {
         
     } catch (error) {
-        res.status(500).send(err.message)
+        res.status(500).send(error.message)
     }
 })
 
@@ -58,7 +69,7 @@ app.post("/messages", async(req, res) => {
     try {
         
     } catch (error) {
-        res.status(500).send(err.message)
+        res.status(500).send(error.message)
     }
 })
 
@@ -66,7 +77,7 @@ app.get("/messages", async(req, res) => {
     try {
         
     } catch (error) {
-        res.status(500).send(err.message)
+        res.status(500).send(error.message)
     }
 })
 
@@ -74,7 +85,7 @@ app.post("/status", async(req, res) => {
     try {
         
     } catch (error) {
-        res.status(500).send(err.message)
+        res.status(500).send(error.message)
     }
 })
 
