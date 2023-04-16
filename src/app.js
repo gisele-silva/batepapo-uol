@@ -75,16 +75,17 @@ app.get("/participants", async(req, res) => {
 
 app.post("/messages", async(req, res) => {
     const { to, text, type } = req.body
-    const { user } = req.header
+    const { user } = req.headers
 
-    const validation = messageSchema.validate(req.body, {abortEarly: false})
+    const validation = messageSchema.validate({to, text, type, from: user}, {abortEarly: false})
+    
     if(validation.error){
         const errors = validation.error.details.map((detail) => detail.message)
         return res.status(422).send(errors)
     }
 
     try {
-        const userExist = await db.collection("participants").findOne({user})
+        const userExist = await db.collection("participants").findOne({name: user})
         if (!userExist) return res.status(422).send("Usuário não cadastrado")
 
         await db.collection("messages").insertOne({
