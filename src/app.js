@@ -103,7 +103,7 @@ app.post("/messages", async(req, res) => {
 
 app.get("/messages", async(req, res) => {
     const { user } = req.headers
-    const limit = parseInt(req.query.limit)
+    const { limit } = req.query
     
     if(limit <= 0 || typeof(limit) !== "number") return res.sendStatus(422)
 
@@ -111,12 +111,13 @@ app.get("/messages", async(req, res) => {
         const messages = await db.collection("messages").find().toArray()
         
         const findMessages = messages.filter((message) => {
-            const messagePrivate = message.to==="todos" || messages.to===user ||messages.from===user
-            const messagePublic = message.type === "messages"
+
+            const messagePrivate = message.to==="todos" || message.to===user ||message.from===user
+            const messagePublic = message.type === "message"
             return messagePrivate || messagePublic
         })
         
-        if(limit && limit !== Nan) return res.send(findMessages.slice(limit))
+        if(limit && limit !== Nan) return res.send(findMessages.slice(-limit))
         
     res.send(findMessages)
     } catch (error) {
