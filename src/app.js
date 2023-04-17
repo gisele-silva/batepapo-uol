@@ -118,7 +118,7 @@ app.get("/messages", async(req, res) => {
         })
         
         if(limit && limit !== Nan) return res.send(findMessages.slice(-limit))
-        
+        res.send(findMessages)
     res.send(findMessages)
     } catch (error) {
         res.status(500).send(error.message)
