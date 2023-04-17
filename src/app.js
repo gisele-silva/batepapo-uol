@@ -131,7 +131,7 @@ app.post("/status", async(req, res) => {
     
     try {
         const userExist = await db.collection("participants").findOne({name: user})
-        if (!userExist) return res.sendStatus(422)
+        if (!userExist) return res.sendStatus(404)
 
         await db.collection("participants").updateOne(
             {name: user},
