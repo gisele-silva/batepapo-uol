@@ -105,20 +105,9 @@ app.get("/messages", async(req, res) => {
     const { user } = req.headers
     const limit = req.query.limit
     
-    //if(limit <= 0 || typeof(limit) !== "number") return res.sendStatus(422)
     if (isNaN(limit) && limit || parseInt(limit) <= 0) return res.sendStatus(422)
 
     try {
-        /*const messages = await db.collection("messages").find().toArray()
-        
-        const findMessages = messages.filter((message) => {
-            const messagePrivate = message.to==="Todos" || message.to===user ||message.from===user
-            const messagePublic = message.type === "message"
-            return messagePrivate || messagePublic
-        })
-        
-        if(limit && limit !== NaN) return res.send(findMessages.slice(-limit))
-        res.send(findMessages)*/
 
         const messages = await db.collection("messages").find({
             $or: [
@@ -136,13 +125,13 @@ app.get("/messages", async(req, res) => {
     }
 })
 
-app.put("/status", async(req, res) => {
+app.post("/status", async(req, res) => {
     const {user} = req.headers
-    //if (!user) return res.sendStatus(404)
+    if (!user) return res.sendStatus(404)
     
     try {
         const userExist = await db.collection("participants").findOne({name: user})
-        if (!userExist) return res.sendStatus(404)
+        if (!userExist) return res.sendStatus(422)
 
         await db.collection("participants").updateOne(
             {name: user},
