@@ -103,23 +103,34 @@ app.post("/messages", async(req, res) => {
 
 app.get("/messages", async(req, res) => {
     const { user } = req.headers
-    const { limit } = req.query
+    const limit = req.query.limit
     
-    if(limit <= 0 || typeof(limit) !== "number") return res.sendStatus(422)
+    //if(limit <= 0 || typeof(limit) !== "number") return res.sendStatus(422)
+    if (isNaN(limit) && limit || parseInt(limit) <= 0) return res.sendStatus(422)
 
     try {
-        const messages = await db.collection("messages").find().toArray()
+        /*const messages = await db.collection("messages").find().toArray()
         
         const findMessages = messages.filter((message) => {
-
             const messagePrivate = message.to==="Todos" || message.to===user ||message.from===user
             const messagePublic = message.type === "message"
             return messagePrivate || messagePublic
         })
         
-        if(limit && limit !== Nan) return res.send(findMessages.slice(-limit))
-        res.send(findMessages)
-    res.send(findMessages)
+        if(limit && limit !== NaN) return res.send(findMessages.slice(-limit))
+        res.send(findMessages)*/
+
+        const messages = await db.collection("messages").find({
+            $or: [
+              { from: user },
+              { to: { $in: [user, "Todos"] } },
+              { type: "message" }
+            ]
+          }).limit(Number(limit)).toArray()
+      
+        res.send(messages)
+      
+
     } catch (error) {
         res.status(500).send(error.message)
     }
@@ -127,7 +138,7 @@ app.get("/messages", async(req, res) => {
 
 app.put("/status", async(req, res) => {
     const {user} = req.headers
-    if (!user) return res.sendStatus(404)
+    //if (!user) return res.sendStatus(404)
     
     try {
         const userExist = await db.collection("participants").findOne({name: user})
@@ -151,9 +162,9 @@ setInterval (async () => {
         const inactive = await db.collection("participants").find({lastStatus: {$lte: seconds}}).toArray()
 
         if (inactive.length > 0) {
-            const lastMessage = inactive.map((inactive) => {
+            const lastMessage = inactive.map((usuario) => {
                 return {
-                    from: inactive.name,
+                    from: usuario.name,
                     to: "Todos",
                     text: 'sai da sala...',
                     type: 'status',
